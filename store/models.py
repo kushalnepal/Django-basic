@@ -1,5 +1,8 @@
 from django.db import models
-
+class Collections(models.Model):
+    title = models.CharField(max_length=255)
+    featured_product = models.ForeignKey(Products, on_delete=models.SET_NULL, null=True, related_name='+')
+    #related_name='+' means we dont need reverse relationship from Products to Collections
 class Products(models.Model):
     # sku = models.CharField(max_length=10, primary_key=True)
     MEMBERSSHIP_BRONZE = 'B'
@@ -37,7 +40,9 @@ class Orders(models.Model):
     ]
     placed_at=models.DateTimeField(auto_now_add=True) #when first order is created django automatically populate this field with current date
     payment_status=models.CharField(max_length=1,choices=STATUS_CHOICES,default=PENDING_STATUS)
-    customer=models.ForeignKey(Customers,on_delete=models.CASCADE) #ForeignKey to Customers model
+    customer=models.ForeignKey(Customers,on_delete=models.PROTECT) #ForeignKey to Customers model
+    # IMP customer=models.ForeignKey('Customers',on_delete=models.PROTECT) 
+    # IMP when we have large model set some time we write Customer below then we have to use string 'Customers' instead of direct reference
 
 class Address(models.Model):
     street = models.CharField(max_length=255)
@@ -48,14 +53,14 @@ class Address(models.Model):
     #Why not one-to-many has primary key? becz primary key limit one record only but one customer can have multiple addresses
     #customer = models.OneToOneField(Customers, on_delete=models.CASCADE ,primary_key=True) # One-to-One relationship with Customers
 
-class Collections(models.Model):
-    title = models.CharField(max_length=255)
-    featured_product = models.ForeignKey(Products, on_delete=models.SET_NULL, null=True, related_name='+')
-    #related_name='+' means we dont need reverse relationship from Products to Collections
+
 class Carts(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
-class Items(models.Model):
-    order = models.ForeignKey(Orders, on_delete=models.CASCADE) # ForeignKey to Orders model
-    cart = models.ForeignKey(Carts, on_delete=models.CASCADE) # ForeignKey to Carts model
-    quantity = models.IntegerField()
+class OrderItems(models.Model):
+    order = models.ForeignKey(Orders, on_delete=models.PROTECT) # ForeignKey to Orders model 
+    quantity = models.PositiveIntegerField()
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+class CartItems(models.Model):
+    cart = models.ForeignKey(Carts, on_delete=models.CASCADE) # ForeignKey to Carts model
+    product = models.ForeignKey(Products, on_delete=models.CASCADE) # ForeignKey to Products model
+    quantity = models.PositiveSmallIntegerField()
